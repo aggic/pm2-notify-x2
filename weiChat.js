@@ -1,5 +1,4 @@
 const axios = require('axios');
-const crypto = require('crypto');
 const concat = require('lodash.concat');
 
 /**
@@ -20,25 +19,15 @@ class WeiChat {
         this.keys = conf.weiChatBotKeys.split(',');
     }
     /**
-     * @param {Buffer|String} buf
-     * @returns {String}
-     */
-    #md5Buffer(buf) {
-        if (!buf instanceof Buffer && typeof buf != 'string') throw new Error('参数必须是buffer或字符串');
-        let hash = crypto.createHash('md5');
-        hash.update(buf);
-        return hash.digest('hex');
-    }
-    /**
-     * @param {WeiCharSenderParams} params
+     * @param {String} content
      * @returns {Promise}
      */
-    async send(params) {
+    async send(content) {
         const datas = [];
         const errors = [];
         for (let key of this.keys) {
             try {
-                const data = await this.#sendMsg(key, params);
+                const data = await this.#sendMsg(key, content);
                 datas.push(data.data);
             } catch (err) {
                 errors.push(err.toString());
@@ -58,18 +47,15 @@ class WeiChat {
     }
     /**
      * @param {String} key
-     * @param {WeiCharSenderParams} params
+     * @param {String} content
      * @returns {Promise}
      */
-    async #sendMsg(key, params) {
-        const list = params.isAll ? ['@all'] : [];
+    async #sendMsg(key, content) {
         return axios.post(`${this.baseUrl}${key}`, {
-            msgtype: 'image',
-            image: {
-                base64: params.img.toString('base64'),
-                md5: this.#md5Buffer(params.img)
-            },
-            mentioned_list: list
+            msgtype: 'markdown',
+            markdown: {
+                content
+            }
         });
     }
 }

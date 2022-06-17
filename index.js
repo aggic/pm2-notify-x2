@@ -1,7 +1,6 @@
 const pm2 = require('pm2');
 const pmx = require('pmx');
 const moment = require('moment');
-const text2png = require('text2png');
 const md5 = require('md5');
 
 const { DingTalk } = require('./dingTalk');
@@ -51,7 +50,7 @@ pmx.initModule(
      */
     function (err, conf) {
         if (err) throw err;
-        /** 获取当前进程pm_id */
+        /** Get the current process PM ID */
         pm2.list(
             /**
              * @param {Error} err
@@ -67,18 +66,18 @@ pmx.initModule(
             }
         );
         pm2.launchBus((err, bus) => {
-            /** 如果启动错误,则直接抛出错误 */
+            /** If a startup error occurs, an error is thrown directly */
             if (err) throw err;
 
             const DingTalkSender = new DingTalk(conf);
             const WeiChatSender = new WeiChat(conf);
 
             bus.on('log:*', (type, info) => {
-                /** 如果是当前进程的错误,则不处理,有可能会造成递归 */
+                /** If it is an error of the current process, it will not be processed, which may cause recursion */
                 if (info.process.pm_id == currentPmID || currentPmID < 0) return;
                 if (type !== 'err') return;
 
-                /** 数据整理 */
+                /** Data collation */
                 const dateTime = moment(info.at).format('YYYY-MM-DD HH:mm:ss');
                 const sendTo = conf.sendTo.split(',').map((item) => {
                     return item.trim().toUpperCase();
@@ -105,13 +104,8 @@ pmx.initModule(
                                 });
                             break;
                         case 'WEICHAT':
-                            info.title = `\n Server: ${hostName} \n Sevice: ${info.process.name} \n PmId: ${info.process.pm_id} \n Time: ${dateTime}  \n\n `;
-                            let imgBuf = text2png(info.title + info.data || '未知错误', {
-                                font: '22px WenQuanYi Micro Hei Mono',
-                                localFontPath: 'wenquanyi-mi.ttf',
-                                localFontName: 'wenquanyi'
-                            });
-                            WeiChatSender.send({ isAll: false, img: imgBuf })
+                            info.title = `**Server: ${hostName}**\n**Sevice: ${info.process.name}**\n**PmId: ${info.process.pm_id}**\n**Time: ${dateTime}**  \n\n`;
+                            WeiChatSender.send(info.title + '<font color=\"comment\">' + info.data + '</font>')
                                 .then((res) => {
                                     console.log(JSON.stringify(res));
                                 })
@@ -124,7 +118,7 @@ pmx.initModule(
             });
         });
         /**
-         * 保证进程挂起,不退出 + 节流时间处理
+         * Ensure that the process is suspended, do not exit + throttle time processing
          */
         setInterval(function () {
             for (key in sending) {

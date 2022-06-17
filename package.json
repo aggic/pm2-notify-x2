@@ -1,6 +1,6 @@
 {
     "name": "pm2-notify-x2",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "PM2 notify module",
     "main": "index.js",
     "dependencies": {
@@ -9,8 +9,7 @@
         "md5": "^2.3.0",
         "moment": "^2.29.3",
         "pm2": "^5.2.0",
-        "pmx": "^1.6.7",
-        "text2png": "^2.3.0"
+        "pmx": "^1.6.7"
     },
     "repository": {
         "type": "git",
